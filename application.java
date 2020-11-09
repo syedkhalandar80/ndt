@@ -1,38 +1,25 @@
 package restApi.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.annotation.TypeAlias;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.couchbase.core.mapping.Document;
 
+import com.couchbase.client.deps.com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.couchbase.client.java.repository.annotation.Field;
+import com.couchbase.client.java.repository.annotation.Id;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.vladmihalcea.hibernate.type.array.StringArrayType;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 
-import restApi.framework.convertor.String2MapConvertor;
 import restApi.framework.entityConstants.BaseEntityJsonFieldConstant;
 import restApi.framework.entityConstants.PersonEntityJsonFieldConstant;
+import restApi.framework.validators.ValidList;
 import restApi.framework.validators.ValidMap;
 
 /**
@@ -42,18 +29,15 @@ import restApi.framework.validators.ValidMap;
  *
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder({ PersonEntityJsonFieldConstant.ID, PersonEntityJsonFieldConstant.FIRST_NAME,
-		PersonEntityJsonFieldConstant.LAST_NAME, PersonEntityJsonFieldConstant.EMAIL,
-		BaseEntityJsonFieldConstant.CREATE_TIME, BaseEntityJsonFieldConstant.LAST_MODIFIED_TIME,
-		PersonEntityJsonFieldConstant.REGISTRATION_CODE, BaseEntityJsonFieldConstant.INSTANCE,
-		PersonEntityJsonFieldConstant.PERSON_TYPES, PersonEntityJsonFieldConstant.ATTRIBUTES })
+@JsonPropertyOrder({ PersonEntityJsonFieldConstant.ID, PersonEntityJsonFieldConstant.JANRAINID,
+		PersonEntityJsonFieldConstant.FIRST_NAME, PersonEntityJsonFieldConstant.LAST_NAME,
+		PersonEntityJsonFieldConstant.EMAIL, BaseEntityJsonFieldConstant.CREATE_TIME,
+		BaseEntityJsonFieldConstant.LAST_MODIFIED_TIME, PersonEntityJsonFieldConstant.REGISTRATION_CODE,
+		BaseEntityJsonFieldConstant.INSTANCE, PersonEntityJsonFieldConstant.PERSON_TYPES,
+		PersonEntityJsonFieldConstant.ATTRIBUTES })
+@Document
 @TypeAlias(PersonEntityJsonFieldConstant.RESOURCE_TYPE_PERSON)
-@TypeDefs({ @TypeDef(name = "JsonbType", typeClass = JsonBinaryType.class),
-		@TypeDef(name = "StringArray", typeClass = StringArrayType.class) })
-
-@Entity
-@Table(name = "person")
-public class Person extends BaseEntity {
+public class Person extends BaseModel {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -7230541548118810699L;
@@ -62,126 +46,99 @@ public class Person extends BaseEntity {
 	 * Document Id for Person document.
 	 */
 	@Id
-	@JsonProperty(PersonEntityJsonFieldConstant.ID)
+	@Field(PersonEntityJsonFieldConstant.ID)
 	@NotNull(message = "person.id.notNullBlank")
 	@NotBlank(message = "person.id.notNullBlank")
-	@Column(name = "id")
 	private String id;
+
+	/**
+	 * Janrain id of person.
+	 */
+	@Field(PersonEntityJsonFieldConstant.JANRAINID)
+	@NotNull(message = "person.janrainId.notNullBlank")
+	@NotBlank(message = "person.janrainId.notNullBlank")
+	private String janrainId;
 
 	/**
 	 * Registration code of person.
 	 */
-	@JsonProperty(PersonEntityJsonFieldConstant.REGISTRATION_CODE)
+	@Field(PersonEntityJsonFieldConstant.REGISTRATION_CODE)
 	@NotNull(message = "person.registrationCode.notNullBlank")
 	@NotBlank(message = "person.registrationCode.notNullBlank")
-	@Column(name = "registration_code")
 	private String registrationCode;
 
 	/**
 	 * Attributes of person.
 	 */
-	@JsonProperty(PersonEntityJsonFieldConstant.ATTRIBUTES)
-	//@ValidMap(message = "person.attributes.notNullBlank")
-	@Column(name = "attribute", columnDefinition = "jsonb")
-	@Type(type = "JsonbType")
-	@JsonDeserialize(converter = String2MapConvertor.class)
+	@Field(PersonEntityJsonFieldConstant.ATTRIBUTES)
+	@ValidMap(message = "person.attributes.notNullBlank")
 	private Map<String, Object> attributes;
 
 	/**
 	 * Person types.
 	 */
-	@JsonProperty(PersonEntityJsonFieldConstant.PERSON_TYPES)
-	@NotNull(message = "person.personTypes.notNullBlank")
-	@Column(name = "person_type", columnDefinition = "varchar[]")
-	@Type(type = "StringArray")
-	private String[] personTypes;
+	@Field(PersonEntityJsonFieldConstant.PERSON_TYPES)
+	@ValidList(message = "person.personTypes.notNullBlank")
+	private List<String> personTypes;
 
 	/**
 	 * First name field to store First name of Person.
 	 */
-	@JsonProperty(PersonEntityJsonFieldConstant.FIRST_NAME)
+	@Field(PersonEntityJsonFieldConstant.FIRST_NAME)
 	@NotNull(message = "person.firstName.notNullBlank")
 	@NotBlank(message = "person.firstName.notNullBlank")
-	@Column(name = "first_name")
 	private String firstName;
 
 	/**
 	 * Last name field to store Last name of Person.
 	 */
-	@JsonProperty(PersonEntityJsonFieldConstant.LAST_NAME)
-	@Column(name = "last_name")
+	@Field(PersonEntityJsonFieldConstant.LAST_NAME)
 	private String lastName;
 
 	/**
 	 * Email field to store email address of Person.
 	 */
-	@JsonProperty(PersonEntityJsonFieldConstant.EMAIL)
+	@Field(PersonEntityJsonFieldConstant.EMAIL)
 	@Email(message = "person.email.invalid")
-	@Column(name = "email")
 	private String email;
 
 	/** The marketo id. */
-	@JsonProperty(PersonEntityJsonFieldConstant.MARKET_TO_ID)
+	@Field(PersonEntityJsonFieldConstant.MARKET_TO_ID)
 	@JsonIgnore
-	@Column(name = "marketo_id")
 	private String marketoId;
 
 	/** The user token. */
-	@JsonProperty(PersonEntityJsonFieldConstant.USER_TOKEN)
+	@Field(PersonEntityJsonFieldConstant.USER_TOKEN)
 	@JsonIgnore
-	@Column(name = "user_token")
 	private String userToken;
 
 	/** The quit date. */
-	@JsonProperty(PersonEntityJsonFieldConstant.QUIT_DATE)
+	@Field(PersonEntityJsonFieldConstant.QUIT_DATE)
 	@JsonIgnore
-	@Column(name = "quit_date")
 	private String quitDate;
 
 	/** The password. */
-	@JsonProperty(PersonEntityJsonFieldConstant.PASSWORD)
+	@Field(PersonEntityJsonFieldConstant.PASSWORD)
 	@JsonIgnore
-	@Column(name = "password")
 	private String password;
-
+	
 	/** The password. */
-	@JsonProperty(PersonEntityJsonFieldConstant.SOURCE)
-	@Column(name = "source")
+	@Field(PersonEntityJsonFieldConstant.SOURCE)
 	private String source;
 
 	/**
 	 * Last name field to store Last name of Person.
 	 */
-	@JsonProperty(PersonEntityJsonFieldConstant.GENDER)
-	@Column(name = "gender")
+	@Field(PersonEntityJsonFieldConstant.GENDER)
 	private String gender;
-
-	@JsonProperty(PersonEntityJsonFieldConstant.UTC_OFFSET)
-	@Column(name = "utc_offset")
+	
+	@Field(PersonEntityJsonFieldConstant.UTC_OFFSET)
 	private String utcOffset;
-
-	@JsonProperty(PersonEntityJsonFieldConstant.PHOTO_PROFILE_LINK)
-	@Column(name = "photo_profile_link")
+	
+	@Field(PersonEntityJsonFieldConstant.PHOTO_PROFILE_LINK)
 	private String photoProfileLink;
 	
-	/** Joining the Asset table column "person". */
-	@OneToMany (mappedBy="userid",fetch = FetchType.LAZY, orphanRemoval= true)
-	@JsonIgnore
-	private List<Asset> assets=new ArrayList<>();
 	
-	/** Joining the Event table column "person_details". */
-	@OneToMany (mappedBy="userid",fetch = FetchType.LAZY, orphanRemoval= true)
-	@JsonIgnore 
-	private List<Event> events=new ArrayList<>();
-
-	public List<Event> getEvents() {
-		return events;
-	}
-
-	public void setEvents(List<Event> events) {
-		this.events = events;
-	}
-
 	/**
 	 * Gets the password.
 	 *
@@ -195,7 +152,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Sets the password.
 	 *
-	 * @param password the new password
+	 * @param password
+	 *            the new password
 	 */
 	@JsonProperty
 	public void setPassword(String password) {
@@ -203,27 +161,23 @@ public class Person extends BaseEntity {
 	}
 
 	/** The user token. */
-	@JsonProperty(PersonEntityJsonFieldConstant.FORGOT_PASSWORD_TOKEN)
+	@Field(PersonEntityJsonFieldConstant.FORGOT_PASSWORD_TOKEN)
 	@JsonIgnore
-	@Column(name = "forgot_password_token")
 	private String forgotPasswordToken;
 
 	/** The user token. */
-	@JsonProperty(PersonEntityJsonFieldConstant.FORGOT_PASSWORD_TIMESTAMP)
+	@Field(PersonEntityJsonFieldConstant.FORGOT_PASSWORD_TIMESTAMP)
 	@JsonIgnore
-	@Column(name = "forgot_password_timestamp")
 	private Long forgotPasswordTimestamp;
-
+	
 	/** The user token. */
-	@JsonProperty(PersonEntityJsonFieldConstant.AUTH_TOKEN)
+	@Field(PersonEntityJsonFieldConstant.AUTH_TOKEN)
 	@JsonIgnore
-	@Column(name = "auth_token")
 	private String authToken;
 
 	/** The user token. */
-	@JsonProperty(PersonEntityJsonFieldConstant.AUTH_TOKEN_TIMESTAMP)
+	@Field(PersonEntityJsonFieldConstant.AUTH_TOKEN_TIMESTAMP)
 	@JsonIgnore
-	@Column(name = "auth_token_timestamp")
 	private Long authTokenTimestamp;
 
 	/**
@@ -238,7 +192,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Setter method for id of Person.
 	 * 
-	 * @param id - Long id of Person.
+	 * @param id
+	 *            - Long id of Person.
 	 */
 	public void setId(String id) {
 		this.id = id;
@@ -256,7 +211,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Setter method for first name of Person.
 	 * 
-	 * @param firstName - String first name.
+	 * @param firstName
+	 *            - String first name.
 	 */
 	public void setFirstName(String firstName) {
 		this.firstName = firstName;
@@ -274,7 +230,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Setter method for last name of Person.
 	 * 
-	 * @param lastName - String last name of Person.
+	 * @param lastName
+	 *            - String last name of Person.
 	 */
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
@@ -292,10 +249,30 @@ public class Person extends BaseEntity {
 	/**
 	 * Setter method for email address of Person.
 	 * 
-	 * @param email - String email address of Person.
+	 * @param email
+	 *            - String email address of Person.
 	 */
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	/**
+	 * Getter method for Janrainid of person.
+	 * 
+	 * @return String- Janrain id of person.
+	 */
+	public String getJanrainId() {
+		return janrainId;
+	}
+
+	/**
+	 * Setter method for Janrainid of person.
+	 * 
+	 * @param janrainId
+	 *            - janrain id.
+	 */
+	public void setJanrainId(String janrainId) {
+		this.janrainId = janrainId;
 	}
 
 	/**
@@ -310,7 +287,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Setter method for registration code of person.
 	 * 
-	 * @param registrationCode - String registration code.
+	 * @param registrationCode
+	 *            - String registration code.
 	 */
 	public void setRegistrationCode(String registrationCode) {
 		this.registrationCode = registrationCode;
@@ -328,7 +306,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Setter method for attributes of person.
 	 * 
-	 * @param attributes - person attributes.
+	 * @param attributes
+	 *            - person attributes.
 	 */
 	public void setAttributes(Map<String, Object> attributes) {
 		this.attributes = attributes;
@@ -340,16 +319,17 @@ public class Person extends BaseEntity {
 	 * @return List<String> - person types.
 	 */
 	public List<String> getPersonTypes() {
-		return Arrays.asList(personTypes);
+		return personTypes;
 	}
 
 	/**
 	 * Setter method for person types.
 	 * 
-	 * @param personTypes - person types.
+	 * @param personTypes
+	 *            - person types.
 	 */
 	public void setPersonTypes(List<String> personTypes) {
-		this.personTypes = personTypes.toArray(new String[personTypes.size()]);
+		this.personTypes = personTypes;
 	}
 
 	/**
@@ -364,7 +344,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Sets the marketo id.
 	 *
-	 * @param marketoId the new marketo id
+	 * @param marketoId
+	 *            the new marketo id
 	 */
 	public void setMarketoId(String marketoId) {
 		this.marketoId = marketoId;
@@ -382,7 +363,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Sets the user token.
 	 *
-	 * @param userToken the new user token
+	 * @param userToken
+	 *            the new user token
 	 */
 	public void setUserToken(String userToken) {
 		this.userToken = userToken;
@@ -400,7 +382,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Sets the quit date.
 	 *
-	 * @param quitDate the new quit date
+	 * @param quitDate
+	 *            the new quit date
 	 */
 	public void setQuitDate(String quitDate) {
 		this.quitDate = quitDate;
@@ -409,7 +392,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Gets the forgot password token.
 	 *
-	 * @param forgotPasswordToken the 32bit string token
+	 * @param forgotPasswordToken
+	 *            the 32bit string token
 	 */
 	public String getForgotPasswordToken() {
 		return forgotPasswordToken;
@@ -418,7 +402,8 @@ public class Person extends BaseEntity {
 	/**
 	 * Sets the forgot password token.
 	 *
-	 * @param forgotPasswordToken the 32 bit string token
+	 * @param forgotPasswordToken
+	 *            the 32 bit string token
 	 */
 	public void setForgotPasswordToken(String forgotPasswordToken) {
 		this.forgotPasswordToken = forgotPasswordToken;
@@ -449,7 +434,7 @@ public class Person extends BaseEntity {
 	public void setSource(String source) {
 		this.source = source;
 	}
-
+	
 	public String getGender() {
 		return gender;
 	}
@@ -474,19 +459,10 @@ public class Person extends BaseEntity {
 		this.photoProfileLink = photoProfileLink;
 	}
 
-	public List<Asset> getAssets() {
-		return assets;
-	}
-
-	public void setAssets(List<Asset> assets) {
-		this.assets = assets;
-	}
-	
 	public static final String SOURCE_FACEBOOK = "Facebook";
-	public static final String SOURCE_GOOGLE = "Google";
-	public static final String SOURCE_AWS_COGNITO = "AWS Cognito";
+	
 	public static final String SOURCE_JANRAIN = "Janrain";
 
 	public static final String SOURCE_LOCAL = "Local";
-
+	
 }
